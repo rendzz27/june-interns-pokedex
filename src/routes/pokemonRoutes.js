@@ -3,13 +3,25 @@ import * as pokemonController from '../controllers/pokemonController.js';
 
 const router = Router();
 
-// View routes (EJS)
+// ============================================
+// VIEW ROUTES (Return HTML)
+// ============================================
+
+// Home page - list all Pokemon (Restored back to the controller!)
 router.get('/', pokemonController.getHomePage);
+
+// Search Pokemon
 router.get('/search', pokemonController.searchPokemon);
+
+// Filter by type
 router.get('/type/:type', pokemonController.getPokemonByType);
+
+// Pokemon detail page
 router.get('/pokemon/:nameOrId', pokemonController.getPokemonDetails);
 
-// API routes (JSON)
+// ============================================
+// API ROUTES (Return JSON)
+// ============================================
 router.get('/api/pokemon', pokemonController.apiGetAllPokemon);
 router.get('/api/pokemon/search', pokemonController.apiSearchPokemon);
 router.get('/api/pokemon/:nameOrId', pokemonController.apiGetPokemonDetails);

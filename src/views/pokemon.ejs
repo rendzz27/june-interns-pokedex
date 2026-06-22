@@ -1,0 +1,62 @@
+<%- include('partials/header') %>
+
+<div class="detail-container">
+    <% 
+        const pokemonImg = pokemon.image || (pokemon.sprites && pokemon.sprites.other && pokemon.sprites.other['official-artwork'] && pokemon.sprites.other['official-artwork'].front_default) || (pokemon.sprites && pokemon.sprites.front_default) || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + pokemon.id + '.png'; 
+    %>
+    <img class="detail-img" src="<%= pokemonImg %>" alt="<%= pokemon.name %>" style="width: 200px; height: 200px; object-fit: contain;">
+    
+    <div class="id">#<%= String(pokemon.id).padStart(3, '0') %></div>
+    <h1 style="text-transform: capitalize; margin: 10px 0 20px 0; font-size: 2.5rem;"><%= pokemon.name %></h1>
+    
+    <div class="types" style="margin-bottom: 30px;">
+        <% if (pokemon.types && pokemon.types.length > 0) { %>
+            <% pokemon.types.forEach(t => { %>
+                <% 
+                   // Handles both PokeAPI structure (t.type.name) and flat array items safely
+                   const typeName = (t && t.type && t.type.name) ? t.type.name : ((typeof t === 'object') ? (t.name || '') : String(t)); 
+                %>
+                <% if (typeName) { %>
+                    <span class="type-badge <%= typeName.toLowerCase() %>">
+                        <%= typeName %>
+                    </span>
+                <% } %>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <h3 style="margin-bottom: 15px; color: #555; border-bottom: 2px solid #ef5350; display: inline-block; padding-bottom: 5px;">Base Stats</h3>
+    <div class="stats-grid">
+        <% 
+            // Initialize default values
+            let hp = 'N/A', attack = 'N/A', defense = 'N/A', speed = 'N/A';
+
+            // PokeAPI raw array parsing logic
+            if (pokemon.stats && Array.isArray(pokemon.stats)) {
+                pokemon.stats.forEach(s => {
+                    const statName = s.stat && s.stat.name ? s.stat.name.toLowerCase() : '';
+                    if (statName === 'hp') hp = s.base_stat;
+                    if (statName === 'attack') attack = s.base_stat;
+                    if (statName === 'defense') defense = s.base_stat;
+                    if (statName === 'speed') speed = s.base_stat;
+                });
+            } else if (pokemon.stats && typeof pokemon.stats === 'object') {
+                // Controller/Service mapper fallback options
+                hp = pokemon.stats.hp || pokemon.hp || 'N/A';
+                attack = pokemon.stats.attack || pokemon.attack || 'N/A';
+                defense = pokemon.stats.defense || pokemon.defense || 'N/A';
+                speed = pokemon.stats.speed || pokemon.speed || 'N/A';
+            }
+        %>
+        <div><strong>HP:</strong> <%= hp %></div>
+        <div><strong>Attack:</strong> <%= attack %></div>
+        <div><strong>Defense:</strong> <%= defense %></div>
+        <div><strong>Speed:</strong> <%= speed %></div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <a href="/" class="clear-btn" style="background-color: #ef5350;">&larr; Back to Pokédex</a>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

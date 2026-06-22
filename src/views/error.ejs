@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+
+<div class="detail-container" style="max-width: 500px; border-top: 5px solid #ef5350;">
+    <h2 style="color: #ef5350; margin-bottom: 15px;"><%= message %></h2>
+    
+    <p style="color: #666; margin-bottom: 25px; line-height: 1.6;">
+        <%= typeof error === 'object' ? error.message : error %>
+    </p>
+    
+    <a href="/" class="button" style="text-decoration: none; display: inline-block; background-color: #ef5350; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
+        Return to Home
+    </a>
+</div>
+
+<%- include('partials/footer') %>

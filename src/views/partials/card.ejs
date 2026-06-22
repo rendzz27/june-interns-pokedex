@@ -1,0 +1,13 @@
+<a href="/pokemon/<%= pokemon.id %>" class="card">
+    <img src="<%= pokemon.image || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/' + pokemon.id + '.png' %>" alt="<%= pokemon.name %>">
+    <div class="id">#<%= String(pokemon.id).padStart(3, '0') %></div>
+    <div class="name"><%= pokemon.name %></div>
+    <div class="types">
+        <% if (pokemon.types && pokemon.types.length > 0) { %>
+            <% pokemon.types.forEach(type => { %>
+                <% const typeString = (type && typeof type === 'object') ? (type.name || '') : String(type); %>
+                <span class="type-badge <%= typeString.toLowerCase() %>"><%= typeString %></span>
+            <% }) %>
+        <% } %>
+    </div>
+</a>
