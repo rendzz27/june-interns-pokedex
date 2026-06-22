@@ -9,26 +9,31 @@ import * as pokemonService from '../services/pokemonService.js';
  */
 export const getHomePage = async (req, res) => {
   try {
-    console.log("=== DEBUG: Entering getHomePage controller ===");
-    
+    console.log('=== DEBUG: Entering getHomePage controller ===');
+
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
 
     // Create a 3-second timeout so the browser NEVER hangs blank forever
-    const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("The service layer timed out while trying to fetch Pokemon data! Ensure pokemonService.js or pokemonRepository.js isn't caught in a loop.")), 3000)
+    const timeout = new Promise((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              "The service layer timed out while trying to fetch Pokemon data! Ensure pokemonService.js or pokemonRepository.js isn't caught in a loop."
+            )
+          ),
+        3000
+      )
     );
 
     // Race the data fetch against the 3-second timer
     const [data, types] = await Promise.race([
-      Promise.all([
-        pokemonService.getAllPokemon(page, limit),
-        pokemonService.getPokemonTypes()
-      ]),
+      Promise.all([pokemonService.getAllPokemon(page, limit), pokemonService.getPokemonTypes()]),
       timeout
     ]);
 
-    console.log("=== DEBUG: Service successfully returned data ===");
+    console.log('=== DEBUG: Service successfully returned data ===');
 
     res.render('index', {
       ...data,
@@ -37,7 +42,7 @@ export const getHomePage = async (req, res) => {
       selectedType: ''
     });
   } catch (error) {
-    console.error("=== DEBUG ERROR IN CONTROLLER ===", error.message);
+    console.error('=== DEBUG ERROR IN CONTROLLER ===', error.message);
     // Send a readable error message directly to the screen so we can diagnose the data layer
     res.status(500).send(`
       <div style="padding: 20px; font-family: monospace; background: #fee; color: #b11; border: 1px solid #ecc;">
