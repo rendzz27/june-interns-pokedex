@@ -1,20 +1,13 @@
 name: Project Submission Pipeline
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, edited, synchronize]
-
-# Cancel superseded runs when new commits are pushed to the same PR.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   extract-student-info:
     name: Extract Student Info
     runs-on: ubuntu-latest
-    # Expose the validated details so the final submission job can use them
-    # as the API request body.
     outputs:
       first_name: ${{ steps.extract.outputs.first_name }}
       last_name: ${{ steps.extract.outputs.last_name }}
@@ -122,13 +115,9 @@ jobs:
           echo "PR opened by: $PR_AUTHOR"
           echo ""
 
-          # GitHub logins are case-insensitive, so normalise before comparing.
           EXPECTED=$(echo "$PR_AUTHOR" | tr '[:upper:]' '[:lower:]')
           FAILED=0
 
-          # The PR commits API returns the GitHub account linked to each commit
-          # in `.author.login` (null when the commit email isn't linked to any
-          # GitHub user). Compare every commit's author to the PR opener.
           while read -r LOGIN SHA; do
             ACTUAL=$(echo "$LOGIN" | tr '[:upper:]' '[:lower:]')
 
@@ -160,6 +149,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -198,7 +189,6 @@ jobs:
   submit:
     name: Send Certificate
     runs-on: ubuntu-latest
-    # Runs last: only after the student info is valid AND all checks pass.
     needs: [extract-student-info, verify, verify-authorship]
     steps:
       - name: Submit student details to API
@@ -207,13 +197,15 @@ jobs:
           LAST_NAME: ${{ needs.extract-student-info.outputs.last_name }}
           PROGRAM: ${{ needs.extract-student-info.outputs.program }}
           STUDENT_EMAIL: ${{ needs.extract-student-info.outputs.student_email }}
+          SUBMISSION_API_URL: https://b854d624-9ddd-45bf-b9c9-e1e0a5f81e64.riomar.dev/api/certificates
+          SUBMISSION_API_TOKEN: 9NNM6xnZYdTmBZs37qwFLh9OqLOa2Jal
         run: |
           echo "All checks passed. Ready to submit the following details:"
           echo "  First Name : $FIRST_NAME"
           echo "  Last Name  : $LAST_NAME"
           echo "  Program    : $PROGRAM"
           echo "  Email      : $STUDENT_EMAIL"
-          
+
           PAYLOAD=$(jq -n \
             --arg first_name  "$FIRST_NAME" \
             --arg last_name   "$LAST_NAME" \
@@ -224,13 +216,11 @@ jobs:
           echo "Request body:"
           echo "$PAYLOAD"
 
-          # Capture the response body and HTTP status separately so a 4xx/5xx
-          # still prints the API's error message (which explains the 400).
           HTTP_STATUS=$(curl --silent --show-error \
             -o response.txt -w "%{http_code}" \
-            -X POST "${{ secrets.SUBMISSION_API_URL }}" \
+            -X POST "$SUBMISSION_API_URL" \
             -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.SUBMISSION_API_TOKEN }}" \
+            -H "Authorization: Bearer $SUBMISSION_API_TOKEN" \
             -d "$PAYLOAD")
 
           echo "HTTP status: $HTTP_STATUS"
